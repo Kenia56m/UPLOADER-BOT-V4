@@ -13,7 +13,7 @@ class Config(object):
     
     BOT_TOKEN = os.environ.get("BOT_TOKEN", "6584034284:AAH24SKX6aVuYX8cA9zzmf2zwexcfhTKyOM")
     API_ID = int(os.environ.get("API_ID", "21450330"))
-    API_HASH = os.environ.get("API_HASH", "6584034284:AAH24SKX6aVuYX8cA9zzmf2zwexcfhTKyOM")
+    API_HASH = os.environ.get("API_HASH", "03930a977a39450810e17ebca6512e79")
     
     DOWNLOAD_LOCATION = "./DOWNLOADS"
     MAX_FILE_SIZE = 2194304000
