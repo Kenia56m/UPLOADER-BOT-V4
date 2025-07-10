@@ -16,12 +16,22 @@ from plugins.functions.display_progress import progress_for_pyrogram, humanbytes
 from plugins.database.database import db
 from PIL import Image
 from plugins.functions.ran_text import random_char
+
 cookies_file = 'cookies.txt'
+
 # Set up logging
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 logging.getLogger("pyrogram").setLevel(logging.WARNING)
+
+# Función para validar si el archivo de cookies existe y tiene contenido válido
+def is_valid_cookies_file(file_path):
+    if not os.path.exists(file_path):
+        return False
+    with open(file_path, 'r', encoding='utf8') as f:
+        lines = f.readlines()
+        return any(line.strip() and not line.startswith("#") for line in lines)
 
 async def youtube_dl_call_back(bot, update):
     cb_data = update.data
@@ -88,19 +98,6 @@ async def youtube_dl_call_back(bot, update):
     os.makedirs(tmp_directory_for_each_user, exist_ok=True)
     download_directory = os.path.join(tmp_directory_for_each_user, custom_file_name)
     
-    command_to_exec = [
-        "yt-dlp",
-        "-c",
-        "--max-filesize", str(Config.TG_MAX_FILE_SIZE),
-        "--embed-subs",
-        "-f", f"{youtube_dl_format}bestvideo+bestaudio/best",
-        "--hls-prefer-ffmpeg",
-        "--cookies", cookies_file,
-        "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-        youtube_dl_url,
-        "-o", download_directory
-    ]
-    
     if tg_send_type == "audio":
         command_to_exec = [
             "yt-dlp",
@@ -108,14 +105,30 @@ async def youtube_dl_call_back(bot, update):
             "--max-filesize", str(Config.TG_MAX_FILE_SIZE),
             "--bidi-workaround",
             "--extract-audio",
-            "--cookies", cookies_file,
             "--audio-format", youtube_dl_ext,
             "--audio-quality", youtube_dl_format,
             "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
             youtube_dl_url,
             "-o", download_directory
         ]
-    
+    else:
+        command_to_exec = [
+            "yt-dlp",
+            "-c",
+            "--max-filesize", str(Config.TG_MAX_FILE_SIZE),
+            "--embed-subs",
+            "-f", f"{youtube_dl_format}bestvideo+bestaudio/best",
+            "--hls-prefer-ffmpeg",
+            "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+            youtube_dl_url,
+            "-o", download_directory
+        ]
+
+    # ✅ Agrega cookies solo si el archivo es válido
+    if is_valid_cookies_file(cookies_file):
+        command_to_exec.extend(["--cookies", cookies_file])
+
+    # Configuración adicional opcional
     if Config.HTTP_PROXY:
         command_to_exec.extend(["--proxy", Config.HTTP_PROXY])
     if youtube_dl_username:
